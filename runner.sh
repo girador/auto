@@ -17,7 +17,7 @@ echo -e "\n[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - \033[0;35mAll old proce
 
 targets="https://raw.githubusercontent.com/girador/res/main/targets.txt"
 
-proxy_interval="1200"
+proxy_interval="600"
 proxy_interval="-p $proxy_interval"
 
 num_of_copies="${1:-1}"
