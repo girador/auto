@@ -1,7 +1,8 @@
 #!/bin/bash
 
-threads="${1:-3000}"
-rpc="${2:-2000}"
+num_of_copies="${1:-1}"
+threads="${2:-3000}"
+rpc="${3:-2000}"
 
 #Just in case kill previous copy of mhddos_proxy
 sudo pkill -f runner.sh
@@ -38,4 +39,4 @@ sleep 2m
 
 cd ~/auto
 
-screen -dmS "mhddos" bash runner.sh 1 $threads $rpc
+screen -dmS "mhddos" bash runner.sh $num_of_copies $threads $rpc
