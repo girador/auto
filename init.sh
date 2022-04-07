@@ -3,10 +3,6 @@
 threads="${1:-3000}"
 rpc="${2:-2000}"
 
-cd ~
-sudo rm -rf auto || true
-git clone https://github.com/girador/auto
-
 #Just in case kill previous copy of mhddos_proxy
 sudo pkill -f runner.sh
 sudo pkill -f runner.py
