@@ -16,7 +16,7 @@ mhddos_repo='https://github.com/porthole-ascend-cinnamon/mhddos_proxy.git'
 mhddos_dir=$my_dir/mhddos
 
 my_ulimit=1048576
-attack_timeout=20m
+attack_timeout=10m
 targets='https://raw.githubusercontent.com/girador/res/main/targets.txt'
 
 # kill child processes on ctrl+c
