@@ -161,8 +161,6 @@ self_run() {
 			return
 		}
 		
-		self_install || true
-
 		cd "$tool_dir"
 
 		if [ "$target_mode" = custom ]; then
