@@ -160,6 +160,8 @@ self_run() {
 			target_mode="$target_mode" "$my_path" run "$@"
 			return
 		}
+		
+		self_install || true
 
 		cd "$tool_dir"
 
@@ -243,7 +245,7 @@ self_status() {
 		attack_init "$self_status"
 		print_blue "Status of attack $attack_name"
 		pstree -al "$(cut -d. -f1 <<<"$attack_name")"
-		tail -20 "$my_log"/"$(cut -d. -f3 <<<"$attack_name")".log | sed 's/^/\t/'
+		tail -100 "$my_log"/"$(cut -d. -f3 <<<"$attack_name")".log | sed 's/^/\t/'
 		echo -e "\e[0m"
 	done
 
