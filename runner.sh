@@ -1,6 +1,6 @@
 #!/bin/bash
 
-restart_interval="10m"
+restart_interval="20m"
 
 ulimit -n 1048576
 
