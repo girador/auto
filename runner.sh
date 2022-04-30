@@ -1,6 +1,6 @@
 #!/bin/bash
 
-restart_interval="20m"
+restart_interval="10m"
 
 ulimit -n 1048576
 
@@ -81,12 +81,12 @@ do
    	
    	if ((num0 == 1));
    	then	
-		clear
+		#clear
 		echo -e "[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - Running up to date mhddos_proxy"
 	else
 		cd /mhddos_proxy
 		sudo pip3 install -r requirements.txt
-		clear
+		#clear
 		echo -e "[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - Running updated mhddos_proxy"
 		sleep 3s
 	fi
@@ -98,14 +98,14 @@ do
    	
    	if ((num == 1));
    	then	
-		clear
+		#clear
 		echo -e "[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - Running up to date auto_mhddos_alexnest"
 	else
 		cd /auto
-		clear
+		#clear
 		echo -e "[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - Running updated auto_mhddos_alexnest"
 		sudo bash runner.sh $num_of_copies $threads $rpc $debug& # run new downloaded script 
-		sudo pkill -o -f runner.sh
+		#sudo pkill -o -f runner.sh
 		return 0
 		#exit #terminate old script
 	fi
@@ -160,7 +160,7 @@ do
    	done
    	echo -e "\n[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - \033[1;35mDDoS is up and Running, next update of targets list in $restart_interval ...\033[1;0m"
    	sleep $restart_interval
-	clear
+	#clear
    	
    	#Just in case kill previous copy of mhddos_proxy
    	echo -e "[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - Killing all old processes with MHDDoS"
