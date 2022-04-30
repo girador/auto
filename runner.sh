@@ -1,6 +1,6 @@
 #!/bin/bash
 
-restart_interval="10m"
+restart_interval="20m"
 
 ulimit -n 1048576
 
@@ -62,7 +62,7 @@ debug="${4:-}"
 if [ "${debug}" != "--debug" ] && [ "${debug}" != "" ];
 then
 	echo -e "\n[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - \033[0;33mStarting with parameter --debug (--table is not supported in our script)\033[0;0m\n"
-	debug="--table"
+	debug="--debug"
 fi
 
 echo -e "[\033[1;32m$(date +"%d-%m-%Y %T")\033[1;0m] - \033[1;32mStarting attack with such parameters: $num_of_copies parallel atack(s) -t $threads --rpc $rpc $debug...\033[1;0m"
